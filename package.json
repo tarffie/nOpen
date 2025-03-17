@@ -3,12 +3,16 @@
   "private": true,
   "scripts": {
     "build": "turbo run build",
-    "dev": "turbo run dev",
+    "dev": "concurrently -n WEB,ELECTRON,DOCS \"pnpm dev:web\" \"pnpm dev:electron\" \"pnpm dev:docs\"",
+    "dev:web": "turbo run dev --filter=web",
+    "dev:electron": "turbo run dev --filter=electron-app",
+    "dev:docs": "turbo run dev --filter=docs",
     "lint": "turbo run lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "check-types": "turbo run check-types"
   },
   "devDependencies": {
+    "concurrently": "^9.1.2",
     "prettier": "^3.5.3",
     "turbo": "^2.4.4",
     "typescript": "5.8.2"
