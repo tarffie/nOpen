@@ -21,7 +21,7 @@ const ThemeImage = (props: Props) => {
 export default function Home() {
   return (
     <div>
-      <p> Hello, world! 👋 </p>
+      <p className="font-bold underline"> Why hello there, user! </p>
     </div>
   );
 }

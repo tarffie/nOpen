@@ -2,19 +2,17 @@
   "name": "nOpen",
   "private": true,
   "scripts": {
-    "build": "turbo run build",
-    "dev": "concurrently -n WEB,ELECTRON,DOCS \"pnpm dev:web\" \"pnpm dev:electron\" \"pnpm dev:docs\"",
-    "dev:web": "turbo run dev --filter=web",
-    "dev:electron": "turbo run dev --filter=electron-app",
-    "dev:docs": "turbo run dev --filter=docs",
-    "lint": "turbo run lint",
+    "build": "pnpm -r run build",
+    "dev": "concurrently -n WEB,DOCS \"pnpm dev:web\" \"pnpm dev:docs\"",
+    "dev:web": "pnpm --filter ./apps/web run dev",
+    "dev:docs": "pnpm --filter ./apps/docs run dev",
+    "lint": "pnpm -r run lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
-    "check-types": "turbo run check-types"
+    "check-types": "pnpm -r run check-types"
   },
   "devDependencies": {
     "concurrently": "^9.1.2",
     "prettier": "^3.5.3",
-    "turbo": "^2.4.4",
     "typescript": "5.8.2"
   },
   "packageManager": "pnpm@9.0.0",
