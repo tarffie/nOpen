@@ -12,7 +12,7 @@ const geistMono = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "Notes Open",
+  title: "nOpen",
   description: "your FOSS self-hosted notes app",
 };
 
@@ -24,9 +24,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
-        <main>
-          {children}
-        </main>
+        {children}
       </body>
     </html>
   );
