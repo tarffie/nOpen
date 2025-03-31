@@ -1,0 +1,73 @@
+services:
+  notes-app:
+    env_file: ./notes.env.development
+    build:
+      context: .
+      dockerfile: apps/notes-app/Dockerfile
+      args:
+        APP_NAME: notes-app
+    ports:
+      - "${NOTES_LOCAL_PORT}:${NOTES_DOCKER_PORT}"
+    depends_on:
+      - backend-app
+    environment:
+      - VITE_API_BASE_URL=http://backend-app:8000
+
+  calendar-app:
+    env_file: ./calendar.env.development
+    build:
+      context: .
+      dockerfile: apps/calendar-app/Dockerfile
+      args:
+        APP_NAME: calendar-app
+    ports:
+      - "${CALENDAR_LOCAL_PORT}:${CALENDAR_DOCKER_PORT}"
+    depends_on:
+      - backend-app
+    environment:
+      - VITE_API_BASE_URL=http://backend-app:8000
+
+  backend-app:
+    restart: no
+    env_file: ./backend.env.development
+    build:
+      context: apps/backend-app
+      dockerfile: docker/common/development/workspace/Dockerfile
+      args:
+        APP_NAME: backend-app
+    ports:
+      - "${BACKEND_LOCAL_PORT}:${BACKEND_DOCKER_PORT}"
+    volumes:
+      - backend-data:/var/www/html # Persist data (optional)
+    environment:
+      - APP_DEBUG=true
+      - APP_KEY=${APP_KEY} # Replace this with `php artisan key:generate --show` from your local environment
+      - DB_CONNECTION=${DB_CONNECTION}
+      - DB_HOST= ${DB_HOST} # Important: use service name as hostname
+      - DB_PORT=${DB_PORT}
+      - DB_DATABASE=${DB_DATABASE}
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
+    depends_on:
+      - database
+
+  database:
+    env_file: ./backend.env.development
+    image: postgres
+    ports:
+      - "${DATABASE_LOCAL_PORT}:${DATABASE_DOCKER_PORT}"
+    environment:
+      - POSTGRES_ROOT_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DATABASE=${DB_HOST}
+      - POSTGRES_USER=${DB_USERNAME}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+    volumes:
+      - db-data:/var/lib/postgres # Persist database data
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  backend-data: # Named volume for backend
+  db-data: # Named volume for database
