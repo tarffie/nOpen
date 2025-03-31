@@ -10,9 +10,11 @@ services:
       - "${NOTES_LOCAL_PORT}:${NOTES_DOCKER_PORT}"
     depends_on:
       - backend-app
+    stdin_open: true
+    tty: true
     environment:
       - VITE_API_BASE_URL=http://backend-app:8000
-
+    
   calendar-app:
     env_file: ./calendar.env.development
     build:
@@ -24,6 +26,8 @@ services:
       - "${CALENDAR_LOCAL_PORT}:${CALENDAR_DOCKER_PORT}"
     depends_on:
       - backend-app
+    stdin_open: true
+    tty: true
     environment:
       - VITE_API_BASE_URL=http://backend-app:8000
 
@@ -39,6 +43,8 @@ services:
       - "${BACKEND_LOCAL_PORT}:${BACKEND_DOCKER_PORT}"
     volumes:
       - backend-data:/var/www/html # Persist data (optional)
+    stdin_open: true
+    tty: true
     environment:
       - APP_DEBUG=true
       - APP_KEY=${APP_KEY} # Replace this with `php artisan key:generate --show` from your local environment

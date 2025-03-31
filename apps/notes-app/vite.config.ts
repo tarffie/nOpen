@@ -5,7 +5,7 @@ import path from 'path'
 
 export default defineConfig({
   plugins: [react()],
-  server: { port: 3002, host: true, },
+  server: { port: 5173, host: true, },
   root: './',  // Or the correct relative path to index.html
   build: {
     rollupOptions: {

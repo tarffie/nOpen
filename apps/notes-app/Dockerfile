@@ -24,5 +24,4 @@ RUN pnpm --filter @nopen/notes-app install
 # 7. Expose Vite dev server port
 EXPOSE 3002
 
-# 8. Start dev server with hot reload
-CMD ["pnpm", "--filter", "@nopen/notes-app", "dev"]
+CMD ["sh"]

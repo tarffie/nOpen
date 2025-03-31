@@ -78,4 +78,4 @@ USER www
 #ENTRYPOINT ["php","artisan", "serve", "--host=0.0.0.0", "--port=8000"]
 
 # Default command to keep the container running
-CMD ["php","artisan", "serve", "--host=0.0.0.0", "--port=8000"]
+CMD ["sh"]

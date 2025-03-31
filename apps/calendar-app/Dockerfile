@@ -25,4 +25,4 @@ RUN pnpm --filter @nopen/calendar-app install
 EXPOSE 3003
 
 # 8. Start dev server with hot reload
-CMD ["pnpm", "--filter", "@nopen/calendar-app", "dev"]
+CMD ["sh"]
