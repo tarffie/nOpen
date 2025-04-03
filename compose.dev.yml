@@ -33,7 +33,9 @@ services:
 
   backend-app:
     restart: no
-    env_file: ./backend.env.development
+    env_file: 
+      - ./backend.env.development
+      - ./apps/backend-app/.env
     build:
       context: apps/backend-app
       dockerfile: docker/common/development/workspace/Dockerfile
@@ -42,20 +44,25 @@ services:
     ports:
       - "${BACKEND_LOCAL_PORT}:${BACKEND_DOCKER_PORT}"
     volumes:
-      - backend-data:/var/www/html # Persist data (optional)
+      - ./apps/backend-app:/var/www/html # Persist data (optional)
+      - /var/www/html/vendor  # Keep vendor files persistent
     stdin_open: true
     tty: true
     environment:
       - APP_DEBUG=true
       - APP_KEY=${APP_KEY} # Replace this with `php artisan key:generate --show` from your local environment
       - DB_CONNECTION=${DB_CONNECTION}
-      - DB_HOST= ${DB_HOST} # Important: use service name as hostname
+      - DB_HOST=${DB_HOST} # Important: use service name as hostname
       - DB_PORT=${DB_PORT}
       - DB_DATABASE=${DB_DATABASE}
       - DB_USERNAME=${DB_USERNAME}
       - DB_PASSWORD=${DB_PASSWORD}
+      - USER_ID=${UID:-1000}
+      - GROUP_ID=${GID:-1000}
     depends_on:
       - database
+    networks:
+      - app-network
 
   database:
     env_file: ./backend.env.development
@@ -64,16 +71,18 @@ services:
       - "${DATABASE_LOCAL_PORT}:${DATABASE_DOCKER_PORT}"
     environment:
       - POSTGRES_ROOT_PASSWORD=${DB_PASSWORD}
-      - POSTGRES_DATABASE=${DB_HOST}
+      - POSTGRES_DATABASE=${DB_DATABASE}
       - POSTGRES_USER=${DB_USERNAME}
       - POSTGRES_PASSWORD=${DB_PASSWORD}
     volumes:
       - db-data:/var/lib/postgres # Persist database data
+    networks:
+      - app-network
 
 networks:
   app-network:
     driver: bridge
 
 volumes:
-  backend-data: # Named volume for backend
+  backend-app: # Named volume for backend
   db-data: # Named volume for database

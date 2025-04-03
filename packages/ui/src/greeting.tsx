@@ -1,4 +1,4 @@
-import { getTimeBasedGreeting } from "@repo/utils"
+import { getTimeBasedGreeting } from "@repo/utils";
 
 interface GreetingProps {
   name: string;

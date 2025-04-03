@@ -1,4 +1,3 @@
-# docker/development/workspace/Dockerfile
 # Use the official PHP CLI image as the base
 FROM php:8.4.1-cli
 
@@ -6,7 +5,7 @@ FROM php:8.4.1-cli
 ARG UID=1000
 ARG GID=1000
 
-# Install system dependencies and build libraries
+# Install system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     unzip \
@@ -31,17 +30,15 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer \
     && apt-get autoremove -y && apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-# Use ARG to define environment variables passed from the Docker build command or Docker Compose.
-ARG XDEBUG_ENABLED
-ARG XDEBUG_MODE
-ARG XDEBUG_HOST
-ARG XDEBUG_IDE_KEY
-ARG XDEBUG_LOG
-ARG XDEBUG_LOG_LEVEL
+# Configure Xdebug
+ARG XDEBUG_ENABLED=false
+ARG XDEBUG_MODE=develop,debug
+ARG XDEBUG_HOST=host.docker.internal
+ARG XDEBUG_IDE_KEY=PHPSTORM
+ARG XDEBUG_LOG=/tmp/xdebug.log
+ARG XDEBUG_LOG_LEVEL=7
 
-# Configure Xdebug if enabled
 RUN if [ "${XDEBUG_ENABLED}" = "true" ]; then \
-    docker-php-ext-enable xdebug && \
     echo "xdebug.mode=${XDEBUG_MODE}" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini && \
     echo "xdebug.idekey=${XDEBUG_IDE_KEY}" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini && \
     echo "xdebug.log=${XDEBUG_LOG}" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini && \
@@ -50,32 +47,39 @@ RUN if [ "${XDEBUG_ENABLED}" = "true" ]; then \
     echo "xdebug.start_with_request=yes" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini ; \
 fi
 
-# Create user and group
-RUN if getent group ${GID}; then \
-      useradd -m -u ${UID} -g ${GID} -s /bin/bash www; \
-    else \
-      groupadd -g ${GID} www && \
-      useradd -m -u ${UID} -g www -s /bin/bash www; \
-    fi && \
-    usermod -aG sudo www && \
-    echo 'www ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
+# Create custom user matching host user
+RUN if ! getent group ${GID}; then groupadd -g ${GID} www; fi && \
+    if ! getent passwd ${UID}; then useradd -u ${UID} -g ${GID} -m www; fi && \
+    mkdir -p /var/www/html && \
+    chown -R ${UID}:${GID} /var/www
 
-# Switch to the non-root user
+# Create www-data user with different UID/GID (fallback)
+RUN if [ "${UID}" -ne 82 ]; then \
+    usermod -u 82 www-data || true && \
+    groupmod -g 82 www-data || true; \
+fi
 
-# Set the working directory
-WORKDIR /var/www
+# Set working directory
+WORKDIR /var/www/html
 
-COPY . .
+# Copy application files
+COPY --chown=${UID}:${GID} . .
 
-# Install PHP dependencies
-RUN composer install --optimize-autoloader --no-dev
+# Install dependencies
+RUN if [ -f "composer.json" ]; then composer install --optimize-autoloader --no-dev; fi
 
-RUN chown -R www-data:www-data /var/www/storage
+# Ensure storage and bootstrap/cache are writable
+RUN mkdir -p storage/framework/{sessions,views,cache} && \
+    mkdir -p bootstrap/cache && \
+    chown -R ${UID}:${GID} storage bootstrap/cache && \
+    chmod -R 775 storage bootstrap/cache
 
-USER www
+# Create PsySH config directory
+RUN mkdir -p /var/www/.config/psysh && \
+    chown -R ${UID}:${GID} /var/www/.config
 
-# Override the entrypoint to avoid the default php entrypoint
-#ENTRYPOINT ["php","artisan", "serve", "--host=0.0.0.0", "--port=8000"]
+# Switch to the custom user
+USER ${UID}
 
-# Default command to keep the container running
+# Default command
 CMD ["sh"]
